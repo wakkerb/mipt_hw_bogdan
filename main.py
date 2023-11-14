@@ -19,7 +19,7 @@ GAME_COLORS = [RED, BLUE, YELLOW, GREEN, MAGENTA, CYAN]
 
 WIDTH = 800
 HEIGHT = 600
-
+g=1
 
 class Ball:
     def __init__(self, screen: pygame.Surface, x=40, y=450):
@@ -46,16 +46,16 @@ class Ball:
         и стен по краям окна (размер окна 800х600).
         """
         # FIXME
-        if((self.x+self.r)<800):
+        if((self.x+self.r)<800) or(self.vx<0) :
             self.x += self.vx
         else:
-            self.vx=-0.3*self.vx
+            self.vx=-0.9*self.vx
 
-        if((self.y+self.r)<600):
+        if((self.y+self.r)<600) or(self.vy<0):
             self.y += self.vy
         else:
-            self.vy = -0.3*self.vy
-        self.vy+=10
+            self.vy = -0.9*self.vy
+        self.vy += g
         # self.x += self.vx
         # self.y -= self.vy
         # self
@@ -106,7 +106,7 @@ class Gun:
         new_ball.r += 5
         self.an = math.atan2((event.pos[1]-new_ball.y), (event.pos[0]-new_ball.x))
         new_ball.vx = self.f2_power * math.cos(self.an)
-        new_ball.vy = - self.f2_power * math.sin(self.an)
+        new_ball.vy = self.f2_power * math.sin(self.an)
         balls.append(new_ball)
         self.f2_on = 0
         self.f2_power = 10
@@ -121,10 +121,16 @@ class Gun:
             self.color = GREY
 
     def draw(self):
-        #pygame.draw.rect(self.screen, self.color,() )
-        rect = pygame.Rect(40, 459, 10+self.f2_power*0.1)
-        rect1 = pygame.transform.rotate(rect, math.degrees(self.an))
-        screen.blit(rect1)
+        width = int(100+self.f2_power*0.1)
+        height = 4
+        rectsurface = pygame.Surface((width, height), pygame.SRCALPHA)
+        pygame.draw.rect(screen, self.color, (20, 450, width, height))
+
+        # rotsurf = pygame.transform.rotate(rectsurface, 45)
+        # rotrect = rotsurf.get_rect()
+        # rotrect.center=(width/2, height/2)
+        # #rect1 = rotrect.get_rect(center=rect.center)
+        # screen.blit(rotsurf, rotrect, (40, 450))
         # FIXIT don't know how to do it
 
     def power_up(self):
@@ -144,20 +150,33 @@ class Target:
     def __init__(self):
         self.new_target()
         self.points = 0
+        # self.live=1
+        # self.points=0
+        # self.color = RED
+        # x = self.x = randint(600, 780)
+        # y = self.y = randint(300, 550)
+        # r = self.r = randint(2, 50)
+
 
     def new_target(self):
         """ Инициализация новой цели. """
+        # x = self.x = randint(600, 780)
+        # y = self.y = randint(300, 550)
+        # r = self.r = randint(2, 50)
+        # color = self.color = RED
+        self.live = 1
+        self.points = 0
+        self.color = RED
         x = self.x = randint(600, 780)
         y = self.y = randint(300, 550)
         r = self.r = randint(2, 50)
-        color = self.color = RED
 
     def hit(self, points=1):
         """Попадание шарика в цель."""
         self.points += points
 
     def draw(self):
-        ...
+        pygame.draw.circle(screen, self.color,(self.x, self.y), self.r)
 
 
 pygame.init()
