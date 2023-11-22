@@ -20,6 +20,12 @@ GAME_COLORS = [RED, BLUE, YELLOW, GREEN, MAGENTA, CYAN]
 WIDTH = 800
 HEIGHT = 600
 g=1
+background = pygame.transform.scale(pygame.image.load("images/background.jpg"), (800, 600))
+snitchim = pygame.image.load("images/output.png")
+tank = pygame.transform.scale(pygame.image.load("images/tank.png"), (100,100))
+
+
+
 
 class Ball:
     def __init__(self, screen: pygame.Surface, x=40, y=450):
@@ -97,6 +103,8 @@ class manyBall():
     def give_balls(self):
         for i in range(self.num):
             new_ball=Ball(self.screen)
+            new_ball.x = self.x
+            new_ball.y=self.y
             new_ball.vx = self.vx
             new_ball.vy=self.vy+5-2*i
             self.balls.append(new_ball)
@@ -115,6 +123,23 @@ class Gun:
         self.color = GREY
         self.x = 40
         self.y=450
+        self.img = tank
+
+    def move_left(self):
+        if(self.x>=45):
+            self.x= self.x-25
+
+    def move_right(self):
+        if(self.x<=755):
+            self.x= self.x+25
+
+    def move_up(self):
+        if(self.y>=300):
+            self.y-=5
+
+    def move_down(self):
+        if (self.y<=500):
+            self.y+=5
 
     def fire2_start(self, event):
         self.f2_on = 1
@@ -138,6 +163,8 @@ class Gun:
         vy = -self.f2_power * math.sin(self.an)
         if (Kspace):
             newmanyball = manyBall(self.screen)
+            newmanyball.x=self.x
+            newmanyball.y=self.y
             newmanyball.vx = vx
             newmanyball.vy=vy
             new_balls = newmanyball.give_balls()
@@ -145,6 +172,8 @@ class Gun:
             bullet+=len(new_balls)
         else:
             new_ball = Ball(self.screen)
+            new_ball.x=self.x
+            new_ball.y=self.y
             new_ball.vx=vx
             new_ball.vy=vy
             bullet += 1
@@ -180,6 +209,10 @@ class Gun:
     #     self.rotrect.center = (40, 450)
     #     screen.blit(self.rotsurf, self.rotrect)
     def draw(self):
+        tank_rect = self.img.get_rect(center=(self.x, self.y))
+        tank_rect[0]=tank_rect[0]-5
+        tank_rect[1] = tank_rect[1] +15
+        screen.blit(self.img, tank_rect)
         pygame.draw.line(
             self.screen,
             self.color,
@@ -188,6 +221,8 @@ class Gun:
              * (15 + self.f2_power / 2)),
             width=7
         )
+
+
         # width = int(100+self.f2_power*0.1)
         # height = 50
         # self.rectsurface = pygame.Surface((width, height))
@@ -246,7 +281,7 @@ class Target:
         self.color = RED
         x = self.x = randint(600, 780)
         y = self.y = randint(300, 550)
-        r = self.r = randint(2, 50)
+        r = self.r = randint(25, 50)
         self.vx = 15
         self.vy = 15
 
@@ -299,6 +334,10 @@ class Snitch(Target):
             self.vy = -self.vy
         self.y-=self.vy
 
+    def draw(self):
+        sn_now=pygame.transform.scale(snitchim,(2*self.r,2*self.r))
+        screen.blit(sn_now, (self.x - self.r, self.y - self.r))
+        
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -312,8 +351,13 @@ target2 = Snitch(screen)
 targets = [target1, target2]
 finished = False
 Kspace=0
+Akey = 0
+Wkey=0
+Skey=0
+Dkey=0
 while not finished:
-    screen.fill(WHITE)
+    #screen.fill(WHITE)
+    screen.blit(background, (0,0))
     gun.draw()
     for t in targets:
         t.draw()
@@ -337,10 +381,37 @@ while not finished:
                     Kspace=0
                 else:
                     Kspace=1
+            if event.key == pygame.K_a:
+                Akey = 1
+            if event.key == pygame.K_s:
+                Skey = 1
+            if event.key == pygame.K_d:
+                Dkey = 1
+            if event.key == pygame.K_w:
+                Wkey = 1
+        elif event.type == pygame.KEYUP:
+            if event.key == pygame.K_a:
+                Akey = 0
+            if event.key == pygame.K_s:
+                Skey = 0
+            if event.key == pygame.K_d:
+                Dkey = 0
+            if event.key == pygame.K_w:
+                Wkey = 0
+ #Движение танка
 
 
 
 
+
+    if Akey:
+        gun.move_left()
+    if Skey:
+        gun.move_down()
+    if Dkey:
+        gun.move_right()
+    if Wkey:
+        gun.move_up()
     for t in targets:
         t.move()
     for b in balls:
@@ -351,5 +422,8 @@ while not finished:
                 t.hit()
                 t.new_target()
     gun.power_up()
+    if(len(balls) > 50):
+        balls=balls[len(balls)-30:]
+
 
 pygame.quit()
