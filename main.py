@@ -23,7 +23,7 @@ g=1
 background = pygame.transform.scale(pygame.image.load("images/background.jpg"), (800, 600))
 snitchim = pygame.image.load("images/output.png")
 tank = pygame.transform.scale(pygame.image.load("images/tank.png"), (100,100))
-
+exit_button = pygame.image.load("images/exit.png")
 
 
 
@@ -258,12 +258,13 @@ class Target:
     # self.live = 1
     # FIXME: don't work!!! How to call this functions when object is created?
     # self.new_target()
+
     def __init__(self, screen: pygame.Surface):
         self.screen = screen
         self.new_target()
-        self.points = 0
+        self.points =0
         # self.live=1
-        # self.points=0
+
         # self.color = RED
         # x = self.x = randint(600, 780)
         # y = self.y = randint(300, 550)
@@ -277,7 +278,6 @@ class Target:
         # r = self.r = randint(2, 50)
         # color = self.color = RED
         self.live = 1
-        self.points = 0
         self.color = RED
         x = self.x = randint(600, 780)
         y = self.y = randint(300, 550)
@@ -285,9 +285,9 @@ class Target:
         self.vx = 15
         self.vy = 15
 
-    def hit(self, points=1):
+    def hit(self):
         """Попадание шарика в цель."""
-        self.points += points
+        self.points += 1
 
     def move(self):
         if ((self.x + self.r) >= 800) and (self.vx>0):
@@ -337,11 +337,24 @@ class Snitch(Target):
     def draw(self):
         sn_now=pygame.transform.scale(snitchim,(2*self.r,2*self.r))
         screen.blit(sn_now, (self.x - self.r, self.y - self.r))
-        
+
+
+class Exit_Button():
+    def __init__(self, screen):
+        self.width = 100
+        self.height = 100
+        self.screen=screen
+        self.img = pygame.transform.scale(exit_button, (100, 100))
+        self.rect = self.img.get_rect(center=(740, 60))
+
+    def draw(self):
+        self.screen.blit(self.img, self.rect)
+
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 bullet = 0
+score = 0
 balls = []
 
 clock = pygame.time.Clock()
@@ -350,14 +363,21 @@ target1 = Target(screen)
 target2 = Snitch(screen)
 targets = [target1, target2]
 finished = False
+exit_b = Exit_Button(screen)
 Kspace=0
 Akey = 0
 Wkey=0
 Skey=0
 Dkey=0
+score = 0
+textfont = pygame.font.SysFont('monospace', 40)
 while not finished:
     #screen.fill(WHITE)
+
     screen.blit(background, (0,0))
+    exit_b.draw()
+    text = textfont.render("Points in game: " + str(score), 1, YELLOW)
+    screen.blit(text, (30, 20))
     gun.draw()
     for t in targets:
         t.draw()
@@ -370,7 +390,10 @@ while not finished:
         if event.type == pygame.QUIT:
             finished = True
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            gun.fire2_start(event)
+            if((event.pos[0]>exit_b.rect.left) and (event.pos[0]<exit_b.rect.right) and (event.pos[1]<exit_b.rect.bottom) and (event.pos[1]>exit_b.rect.top)):
+                finished = True
+            else:
+                gun.fire2_start(event)
         elif event.type == pygame.MOUSEBUTTONUP:
             gun.fire2_end(event, Kspace)
         elif event.type == pygame.MOUSEMOTION:
@@ -414,6 +437,7 @@ while not finished:
         gun.move_up()
     for t in targets:
         t.move()
+
     for b in balls:
         b.move()
         for t in targets:
@@ -421,6 +445,12 @@ while not finished:
                 t.live = 0
                 t.hit()
                 t.new_target()
+    score = 0
+    for t in targets:
+        score+=t.points
+
+    #score = target1.points+target2.points
+
     gun.power_up()
     if(len(balls) > 50):
         balls=balls[len(balls)-30:]
